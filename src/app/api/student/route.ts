@@ -30,9 +30,11 @@ export const GET = async (request: NextRequest) => {
     filtered = filtered.filter((std) => std.program === program);
   }
 
-  //filter by student id here
+  if (studentId !== null){
+    filtered =filtered.filter((std) => std.studentId === studentId);
+  }
 
-  return NextResponse.json({ ok: true, students: filtered });
+  return NextResponse.json({ ok: true, students: filtered, });
 };
 
 export const POST = async (request: NextRequest) => {
@@ -98,7 +100,7 @@ export const PUT = async (request: NextRequest) => {
 
 export const DELETE = async (request: NextRequest) => {
   //get body and validate it
-
+  
   //check if student id exist
 
   //perform removing student from DB. You can choose from 2 choices
@@ -107,9 +109,39 @@ export const DELETE = async (request: NextRequest) => {
 
   //or 2. use splice array method
   // DB.students.splice(...)
+  const body = await request.json();
+
+  const parseResult = zStudentGetParam.safeParse(body);
+
+  if (parseResult.success === false) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: parseResult.error.issues[0].message,
+      },
+      { status: 400 }
+    );
+  }
+
+  const foundIndex = DB.students.findIndex(
+    (std) => std.studentId === body.studentId
+  );
+
+  if (foundIndex === -1) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Student ID does not exist",
+      },
+      { status: 404 }
+    );
+  }
+
+  DB.students.splice(foundIndex, 1);
+
 
   return NextResponse.json({
     ok: true,
-    message: `Student Id xxx has been deleted`,
+    message: `Student Id ${body.studentId} has been deleted`,
   });
 };
